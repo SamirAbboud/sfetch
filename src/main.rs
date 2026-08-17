@@ -4,6 +4,7 @@ mod cache;
 mod colors;
 mod utils;
 mod fetch;
+mod logos;
 
 fn main() {
     println!("Distro: {}", fetch::distro(true));
@@ -28,4 +29,5 @@ fn main() {
     println!("Disk: {}", fetch::disk("/", true, true, true, 2));
     println!("GPU: {}", fetch::gpu(true, false));
     println!("Driver: {}", fetch::gpu_driver(false));
+    println!("{}", logos::get_logos_values("arch").0)
 }
