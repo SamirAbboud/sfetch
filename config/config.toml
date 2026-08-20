@@ -1,0 +1,57 @@
+# Layout used to display system information.
+# The values inside `{}` are sfetch functions.
+layout = """
+Hardware & OS
+  >  Distro: {distro(true)}
+  >  Kernel: {kernel(false)}
+  > 󰌢 Laptop: {model(true)}
+  > 󰍹 Monitor: {monitor()}
+  >  GPU: {gpu(true, false)}
+  >  CPU: {cpu(2, false, false)}
+  >  Memory: {memory(true, 2, true)}
+  >  Disk: {disk("/", true, true, true, 2)}
+  >  Driver: {gpu_driver(false)}
+
+Software & Misc
+  >  WM: {wm(true)}
+  >  Shell: {shell(true)}
+  >  Terminal: {terminal()}
+  > 󰔚 Uptime: {uptime(false)}
+  >  Packages: {packages()}
+  >  Theme: {gtk_theme()}
+  >  Icons: {icon_theme()}
+  >  Font: {gtk_font()}
+
+          {colors(true, "  ", true)}
+"""
+
+# Colorize the output of fetch functions.
+# When false, functions use the surrounding text color instead.
+colorize_functions = true
+
+# Color used for normal text.
+# "logo" uses the main color of the selected logo.
+# You can also use a color number from 0 to 15.
+text_color = "logo"
+
+# Default color used for function output.
+# Colors are numbered from 0 to 15.
+functions_color = 7
+
+# Logo to display.
+# "auto" automatically selects the logo based on the distro.
+# You can also specify a distro name, such as "arch".
+logo = "auto"
+
+# Number of spaces between the logo and system information.
+logo_info_whitespace = 5
+
+# Remove leading whitespace from every line in the layout.
+lstrip_info = false
+
+# Whether to print the logo.
+print_logo = true
+
+# Position of the logo.
+# Available values: "left", "top", "right", "bottom".
+logo_position = "left"

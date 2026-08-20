@@ -1,33 +1,64 @@
-use crate::fetch::UptimeLength;
-
 mod cache;
 mod colors;
 mod utils;
 mod fetch;
 mod logos;
+mod config;
+mod render;
+
+use clap::Parser;
+use std::path::PathBuf;
+use render::render;
+
+#[derive(Parser, Debug)]
+#[command(name = "sfetch")]
+struct Cli {
+    /// Use a custom configuration file
+    #[arg(long)]
+    config: Option<PathBuf>,
+
+    /// Publish the default configuration
+    #[arg(long)]
+    publish_config: bool,
+}
+
+fn resolve_config(config: Option<PathBuf>) -> Option<PathBuf> {
+    if let Some(config) = config {
+        return Some(config);
+    }
+
+    let home_config = dirs::config_dir()?.join("sfetch/config.toml");
+
+    if home_config.exists() {
+        Some(home_config)
+    } else {
+        None
+    }
+}
 
 fn main() {
-    println!("Distro: {}", fetch::distro(true));
-    println!("Distro Id: {}", fetch::distro_id());
-    println!("Model: {}", fetch::model(true));
-    println!("Shell: {}", fetch::shell(true));
-    println!("Kernel: {}", fetch::kernel(true));
-    println!("Terminal: {}", fetch::terminal());
-    println!("Hostname: {}", fetch::hostname());
-    println!("Uptime: {}", fetch::uptime(false, UptimeLength::Full));
-    println!("Packages: {}", fetch::packages());
-    println!("DE: {}", fetch::de());
-    println!("WM: {}", fetch::wm(true));
-    println!("GTK Theme: {}", fetch::gtk_theme());
-    println!("Icon theme: {}", fetch::icon_theme());
-    println!("Cursor Theme: {}", fetch::cursor_theme());
-    println!("GTK Font: {}", fetch::gtk_font());
-    println!("CPU: {}", fetch::cpu(2, false, false));
-    println!("Memory: {}", fetch::memory(true, 2, true));
-    println!("Colors: {}", fetch::color_palette(true, "   ", true));
-    println!("Monitor: {}", fetch::monitor());
-    println!("Disk: {}", fetch::disk("/", true, true, true, 2));
-    println!("GPU: {}", fetch::gpu(true, false));
-    println!("Driver: {}", fetch::gpu_driver(false));
-    println!("{}", logos::get_logos_values("arch").0)
+    let cli = Cli::parse();
+
+    if cli.publish_config {
+        let path = dirs::config_dir()
+            .expect("Could not determine config directory")
+            .join("sfetch/config.toml");
+
+        if let Err(error) = config::publish(&path) {
+            eprintln!("Failed to publish config: {error}");
+            std::process::exit(1);
+        }
+
+        return;
+    }
+
+    let config = match config::load(resolve_config(cli.config)) {
+        Ok(config) => config,
+        Err(error) => {
+            eprintln!("Failed to load config: {error}");
+            std::process::exit(1);
+        }
+    };
+
+    render(&config);
 }

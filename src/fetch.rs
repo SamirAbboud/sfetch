@@ -125,7 +125,7 @@ pub fn shell(version: bool) -> String {
         }
     }
 
-    shell
+    capitalize(&shell)
 }
 
 pub fn kernel(small: bool) -> String {
@@ -139,10 +139,12 @@ pub fn kernel(small: bool) -> String {
 }
 
 pub fn terminal() -> String {
-    std::env::var("TERM")
+    let term = std::env::var("TERM")
         .unwrap_or_default()
         .replace("xterm-", "")
-        .to_string()
+        .to_string();
+
+    capitalize(&term)
 }
 
 pub fn hostname() -> String {
@@ -425,7 +427,12 @@ pub fn cpu(round_to: usize, full_name: bool, colorize: bool) -> String {
     full_cpu_info
 }
 
-pub fn memory(gib: bool, round_to: usize, colorize: bool) -> String {
+pub fn memory(
+    gib: bool, 
+    round_to: usize, 
+    colorize: bool,
+    reset_color: &str,
+) -> String {
     let content = match std::fs::read_to_string("/proc/meminfo") {
         Ok(content) => content,
         Err(_) => return String::new(),
@@ -484,7 +491,7 @@ pub fn memory(gib: bool, round_to: usize, colorize: bool) -> String {
             "{}{}%{}",
             colors::get_color(2, true),
             percent,
-            colors::reset(),
+            reset_color,
         );
     } else {
         percent.push('%');
@@ -589,6 +596,7 @@ pub fn disk(
     file_system: bool,
     percent: bool,
     round_mem_to: usize,
+    reset_color: &str,
 ) -> String {
     let c_path = match std::ffi::CString::new(path) {
         Ok(path) => path,
@@ -649,7 +657,7 @@ pub fn disk(
                 "{}{:.2}%{}",
                 colors::get_color(2, true),
                 percent_used,
-                colors::reset(),
+                reset_color,
             )
         } else {
             format!("{:.2}%", percent_used)
@@ -669,7 +677,7 @@ pub fn disk(
     res
 }
 
-pub fn gpu(full_name: bool, colorize: bool) -> String {
+pub fn gpu(full_name: bool, colorize: bool, reset_color: &str) -> String {
     let mut gpus = get_cache("gpus", 30).unwrap_or_default();
 
     if gpus.is_empty() && command_exists("lspci") {
@@ -712,21 +720,21 @@ pub fn gpu(full_name: bool, colorize: bool) -> String {
                     "{}{}{}",
                     colors::get_color(2, true),
                     gpu,
-                    colors::reset()
+                    reset_color,
                 );
             } else if gpu.contains("AMD") {
                 *gpu = format!(
                     "{}{}{}",
                     colors::get_color(1, true),
                     gpu,
-                    colors::reset()
+                    reset_color,
                 );
             } else if gpu.contains("Intel") {
                 *gpu = format!(
                     "{}{}{}",
-                    colors::get_color(4, true),
+                    colors::get_color(5, true),
                     gpu,
-                    colors::reset()
+                    reset_color,
                 );
             }
         }
