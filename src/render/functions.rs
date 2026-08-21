@@ -69,7 +69,7 @@ pub fn execute_function(
         "memory" => {
             let gib = parse_bool_argument(arguments, 0, true);
             let round_to = parse_usize_argument(arguments, 1, 2);
-            let colorize = parse_bool_argument(arguments, 2, false);
+            let colorize = parse_bool_argument(arguments, 2, true);
 
             let reset_color = if colorize_functions {
                 colors::get_color(functions_color, true)
@@ -104,8 +104,8 @@ pub fn execute_function(
         }
 
         "colors" | "color_palette" => {
-            let background = parse_bool_argument(arguments, 0, false);
-            let character = parse_string_argument(arguments, 1, " ");
+            let background = parse_bool_argument(arguments, 0, true);
+            let character = parse_string_argument(arguments, 1, "  ");
             let normal_only = parse_bool_argument(arguments, 2, true);
 
             fetch::color_palette(background, character, normal_only)

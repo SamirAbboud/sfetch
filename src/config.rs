@@ -29,27 +29,27 @@ pub struct Config {
 
 const DEFAULT_LAYOUT: &str = r#"
 Hardware & OS
-  >  Distro: {distro(true)}
-  >  Kernel: {kernel(false)}
+  >  Distro: {distro()}
+  >  Kernel: {kernel()}
   > 󰌢 Laptop: {model(true)}
   > 󰍹 Monitor: {monitor()}
-  >  GPU: {gpu(true, false)}
-  >  CPU: {cpu(2, false, false)}
-  >  Memory: {memory(true, 2, true)}
-  >  Disk: {disk("/", true, true, true, 2)}
-  >  Driver: {gpu_driver(false)}
+  >  GPU: {gpu()}
+  >  CPU: {cpu()}
+  >  Memory: {memory()}
+  >  Disk: {disk()}
+  >  Driver: {gpu_driver()}
 
 Software & Misc
-  >  WM: {wm(true)}
-  >  Shell: {shell(true)}
+  >  WM: {wm()}
+  >  Shell: {shell()}
   >  Terminal: {terminal()}
-  > 󰔚 Uptime: {uptime(false)}
+  > 󰔚 Uptime: {uptime()}
   >  Packages: {packages()}
   >  Theme: {gtk_theme()}
   >  Icons: {icon_theme()}
   >  Font: {gtk_font()}
 
-          {colors(true, "  ", true)}
+          {colors()}
 "#;
 
 const DEFAULT_CONFIG: &str = include_str!("../config/config.toml");
