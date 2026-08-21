@@ -1,4 +1,4 @@
-use crate::{config::Config, logos};
+use crate::{config::{Config, LogoConfig}, logos};
 
 fn visible_width(text: &str) -> usize {
     let mut width = 0;
@@ -25,12 +25,18 @@ fn visible_width(text: &str) -> usize {
 }
 
 pub fn resolve_logo(config: &Config) -> (String, String) {
-    let key = match config.logo.as_str() {
-        "auto" => "",
-        key => key,
-    };
+    match &config.logo {
+        LogoConfig::Name(name) => {
+            let key = if name == "auto" { "" } else { name.as_str() };
 
-    logos::get_logos_values(key)
+            logos::get_logos_values(key)
+        }
+
+        LogoConfig::Custom { logo, main_color } => (
+            logos::colorize_logo(logo),
+            crate::colors::get_color(*main_color, true).to_string(),
+        ),
+    }
 }
 
 pub fn render_left(logo: &str, layout: &str, whitespace: usize) -> String {
@@ -82,10 +88,7 @@ pub fn render_right(logo: &str, layout: &str, whitespace: usize) -> String {
         .unwrap_or(0);
 
     let gap = " ".repeat(whitespace);
-    let leading_empty = logo_lines
-        .iter()
-        .take_while(|line| line.is_empty())
-        .count();
+    let leading_empty = logo_lines.iter().take_while(|line| line.is_empty()).count();
 
     let line_count = logo_lines.len().max(info_lines.len() + leading_empty);
 
@@ -95,10 +98,7 @@ pub fn render_right(logo: &str, layout: &str, whitespace: usize) -> String {
         let logo_line = logo_lines.get(i).copied().unwrap_or("");
 
         let info_line = if i >= leading_empty {
-            info_lines
-                .get(i - leading_empty)
-                .copied()
-                .unwrap_or("")
+            info_lines.get(i - leading_empty).copied().unwrap_or("")
         } else {
             ""
         };

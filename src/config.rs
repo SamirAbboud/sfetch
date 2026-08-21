@@ -4,13 +4,23 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum LogoConfig {
+    Name(String),
+    Custom {
+        logo: String,
+        main_color: usize,
+    },
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct Config {
     pub layout: String,
     pub colorize_functions: bool,
     pub text_color: String,
     pub functions_color: usize,
-    pub logo: String,
+    pub logo: LogoConfig,
     pub logo_info_whitespace: usize,
     pub lstrip_info: bool,
     pub print_logo: bool,
@@ -51,7 +61,7 @@ impl Default for Config {
             colorize_functions: true,
             text_color: "logo".to_string(),
             functions_color: 7,
-            logo: "auto".to_string(),
+            logo: LogoConfig::Name("auto".to_string()),
             logo_info_whitespace: 5,
             lstrip_info: false,
             print_logo: true,

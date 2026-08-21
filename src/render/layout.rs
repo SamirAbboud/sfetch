@@ -8,7 +8,8 @@ use crate::{
 };
 
 pub fn render_layout(config: &Config, text_color: &str) -> String {
-    let mut layout = config.layout.trim_matches('\n').to_string();
+    let mut layout = config.layout.to_string();
+
     let expressions: Vec<String> = extract_expressions(&layout)
         .into_iter()
         .map(str::to_string)

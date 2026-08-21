@@ -787,7 +787,7 @@ d###P            N####p
 ];
 
 
-fn colorize_logo(logo: &str) -> String {
+pub fn colorize_logo(logo: &str) -> String {
     let mut result = logo.to_string();
 
     for index in 0..16 {
