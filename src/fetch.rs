@@ -232,6 +232,62 @@ pub fn uptime(up: bool, length: UptimeLength) -> String {
     }
 }
 
+fn nix_packages() -> Vec<(usize, String)> {
+    if !command_exists("nix-store") {
+        return Vec::new();
+    }
+
+    let mut results = Vec::new();
+
+    // NixOS system profile
+    let system_profile = "/run/current-system/sw";
+
+    if std::path::Path::new(system_profile).exists() {
+        let output = run_command("nix-store", &["-qR", system_profile]);
+        let count = output.lines().count();
+
+        if count > 0 {
+            results.push((count, "nix-system".to_string()));
+        }
+    }
+
+    // Nix user profile
+    if let Ok(user) = std::env::var("USER") {
+        let user_profile = format!("/etc/profiles/per-user/{user}");
+
+        if std::path::Path::new(&user_profile).exists() {
+            let output = run_command(
+                "nix-store",
+                &["-qR", &user_profile],
+            );
+
+            let count = output.lines().count();
+
+            if count > 0 {
+                results.push((count, "nix-user".to_string()));
+            }
+        }
+    }
+
+    // Nix default profile
+    let default_profile = "/nix/var/nix/profiles/default";
+
+    if std::path::Path::new(default_profile).exists() {
+        let output = run_command(
+            "nix-store",
+            &["-qR", default_profile],
+        );
+
+        let count = output.lines().count();
+
+        if count > 0 {
+            results.push((count, "nix-default".to_string()));
+        }
+    }
+
+    results
+}
+
 pub fn packages() -> String {
     let packages_queries = [
         ("kiss", &["-l"][..], "kiss"),
@@ -267,6 +323,12 @@ pub fn packages() -> String {
                 total_pkgs += num_pkgs;
             }
         }
+    }
+    
+    // NixOS
+    for (count, manager) in nix_packages() {
+        package_count.push(format!("{count} {manager}"));
+        total_pkgs += count;
     }
 
     if package_count.len() > 1 {
