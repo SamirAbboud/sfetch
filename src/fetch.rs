@@ -155,26 +155,80 @@ pub fn hostname() -> String {
 }
 
 pub fn uptime(up: bool, length: UptimeLength) -> String {
-    let mut uptime_info = run_command("uptime", &["-p"]);
+    let uptime_seconds = std::fs::read_to_string("/proc/uptime")
+        .unwrap()
+        .split_whitespace()
+        .next()
+        .unwrap()
+        .parse::<f64>()
+        .unwrap();
 
-    if !up {
-        uptime_info = uptime_info.replace("up ", "");
-    }
+    let total_minutes = (uptime_seconds / 60.0) as u64;
 
-    match length {
-        UptimeLength::Full => uptime_info,
-        UptimeLength::Medium => uptime_info
-            .replace(" minutes", "mins")
-            .replace(" hours", "hrs")
-            .replace(" minute", "min")
-            .replace(" hour", "hr"),
-        UptimeLength::Short => uptime_info
-            .replace(" days", "d")
-            .replace(" day", "d")
-            .replace(" minutes", "m")
-            .replace(" hours", "h")
-            .replace(" minute", "m")
-            .replace(" hour", "h"),
+    let days = total_minutes / 1_440;
+    let hours = (total_minutes % 1_440) / 60;
+    let minutes = total_minutes % 60;
+
+    let uptime_info = match length {
+        UptimeLength::Full => {
+            let mut parts = Vec::new();
+
+            if days > 0 {
+                parts.push(format!("{} days", days));
+            }
+
+            if hours > 0 {
+                parts.push(format!("{} hours", hours));
+            }
+
+            if minutes > 0 {
+                parts.push(format!("{} minutes", minutes));
+            }
+
+            parts.join(", ")
+        }
+
+        UptimeLength::Medium => {
+            let mut parts = Vec::new();
+
+            if days > 0 {
+                parts.push(format!("{} days", days));
+            }
+
+            if hours > 0 {
+                parts.push(format!("{} hrs", hours));
+            }
+
+            if minutes > 0 {
+                parts.push(format!("{} mins", minutes));
+            }
+
+            parts.join(", ")
+        }
+
+        UptimeLength::Short => {
+            let mut parts = Vec::new();
+
+            if days > 0 {
+                parts.push(format!("{}d", days));
+            }
+
+            if hours > 0 {
+                parts.push(format!("{}h", hours));
+            }
+
+            if minutes > 0 {
+                parts.push(format!("{}m", minutes));
+            }
+
+            parts.join(", ")
+        }
+    };
+
+    if up {
+        format!("up {}", uptime_info)
+    } else {
+        uptime_info
     }
 }
 
