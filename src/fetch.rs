@@ -1,4 +1,8 @@
-use crate::{cache::{get_cache, set_cache}, colors, utils::{capitalize, command_exists, make_me_pretty, run_command}};
+use crate::{
+    cache::{get_cache, set_cache},
+    colors,
+    utils::{capitalize, command_exists, make_me_pretty, run_command},
+};
 
 #[allow(dead_code)]
 pub enum UptimeLength {
@@ -16,7 +20,7 @@ pub fn distro(architecture: bool) -> String {
                 name = value.trim_matches('"').to_string();
                 break;
             }
-        }        
+        }
     }
 
     if name == "Unknown" && std::env::var("TERMUX_VERSION").is_ok() {
@@ -25,11 +29,11 @@ pub fn distro(architecture: bool) -> String {
 
     if architecture {
         name.push(' ');
-        name.push_str(&std::env::consts::ARCH);
+        name.push_str(std::env::consts::ARCH);
     }
 
     name
-} 
+}
 
 pub fn distro_id() -> String {
     let mut id = String::new();
@@ -61,26 +65,27 @@ pub fn model(version: bool) -> String {
     let device_version_file = format!("{device_dir}product_version");
 
     let mut product_info = String::new();
-    if std::path::Path::new(&vendor_file).is_file() {
-        if let Ok(content) = std::fs::read_to_string(&vendor_file) {
-            product_info = content.trim().to_string();
-        }
+    if std::path::Path::new(&vendor_file).is_file()
+        && let Ok(content) = std::fs::read_to_string(&vendor_file)
+    {
+        product_info = content.trim().to_string();
     }
 
-    if std::path::Path::new(&device_name_file).is_file() {
-        if let Ok(content) = std::fs::read_to_string(&device_name_file) {
-            if !product_info.is_empty() {
-                product_info.push(' ');
-            }
-            product_info.push_str(content.trim());
+    if std::path::Path::new(&device_name_file).is_file()
+        && let Ok(content) = std::fs::read_to_string(&device_name_file)
+    {
+        if !product_info.is_empty() {
+            product_info.push(' ');
+        }
+        product_info.push_str(content.trim());
 
-            if version && std::path::Path::new(&device_version_file).is_file() {
-                if let Ok(content) = std::fs::read_to_string(&device_version_file) {
-                    product_info.push_str(" (");
-                    product_info.push_str(content.trim());
-                    product_info.push(')');
-                }
-            }
+        if version
+            && std::path::Path::new(&device_version_file).is_file()
+            && let Ok(content) = std::fs::read_to_string(&device_version_file)
+        {
+            product_info.push_str(" (");
+            product_info.push_str(content.trim());
+            product_info.push(')');
         }
     }
 
@@ -89,11 +94,7 @@ pub fn model(version: bool) -> String {
 
 pub fn shell(version: bool) -> String {
     let shell_path = std::env::var("SHELL").unwrap_or_default();
-    let mut shell = shell_path
-        .rsplit('/')
-        .next()
-        .unwrap_or("")
-        .to_string();
+    let mut shell = shell_path.rsplit('/').next().unwrap_or("").to_string();
 
     if version {
         let shell_version = match shell.as_str() {
@@ -101,13 +102,13 @@ pub fn shell(version: bool) -> String {
                 .replace("fish, version ", "")
                 .trim()
                 .to_string(),
-            
+
             "zsh" => run_command("zsh", &["--version"])
                 .split_whitespace()
                 .nth(1)
                 .unwrap_or("")
                 .to_string(),
-            
+
             "bash" => std::env::var("BASH_VERSION")
                 .unwrap_or_default()
                 .split('(')
@@ -256,10 +257,7 @@ fn nix_packages() -> Vec<(usize, String)> {
         let user_profile = format!("/etc/profiles/per-user/{user}");
 
         if std::path::Path::new(&user_profile).exists() {
-            let output = run_command(
-                "nix-store",
-                &["-qR", &user_profile],
-            );
+            let output = run_command("nix-store", &["-qR", &user_profile]);
 
             let count = output.lines().count();
 
@@ -273,10 +271,7 @@ fn nix_packages() -> Vec<(usize, String)> {
     let default_profile = "/nix/var/nix/profiles/default";
 
     if std::path::Path::new(default_profile).exists() {
-        let output = run_command(
-            "nix-store",
-            &["-qR", default_profile],
-        );
+        let output = run_command("nix-store", &["-qR", default_profile]);
 
         let count = output.lines().count();
 
@@ -324,7 +319,7 @@ pub fn packages() -> String {
             }
         }
     }
-    
+
     // NixOS
     for (count, manager) in nix_packages() {
         package_count.push(format!("{count} {manager}"));
@@ -334,10 +329,7 @@ pub fn packages() -> String {
     if package_count.len() > 1 {
         format!("{total_pkgs}, ({})", package_count.join(", "))
     } else if package_count.len() == 1 {
-        let manager = package_count[0]
-            .split_whitespace()
-            .nth(1)
-            .unwrap_or("");
+        let manager = package_count[0].split_whitespace().nth(1).unwrap_or("");
 
         format!("{total_pkgs}, {manager}")
     } else {
@@ -407,12 +399,10 @@ fn gtk_fetch(param: &str) -> String {
 }
 
 pub fn gtk_theme() -> String {
-    let mut theme = make_me_pretty(
-        &run_command(
-            "gsettings",
-            &["get", "org.gnome.desktop.interface", "gtk-theme"],
-        )
-    );
+    let mut theme = make_me_pretty(&run_command(
+        "gsettings",
+        &["get", "org.gnome.desktop.interface", "gtk-theme"],
+    ));
 
     if theme.is_empty() {
         theme = gtk_fetch("gtk-theme-name");
@@ -421,14 +411,11 @@ pub fn gtk_theme() -> String {
     theme
 }
 
-
 pub fn icon_theme() -> String {
-    let mut theme = make_me_pretty(
-        &run_command(
-            "gsettings",
-            &["get", "org.gnome.desktop.interface", "icon-theme"],
-        )
-    );
+    let mut theme = make_me_pretty(&run_command(
+        "gsettings",
+        &["get", "org.gnome.desktop.interface", "icon-theme"],
+    ));
 
     if theme.is_empty() {
         theme = gtk_fetch("gtk-icon-theme-name");
@@ -437,14 +424,11 @@ pub fn icon_theme() -> String {
     theme
 }
 
-
 pub fn cursor_theme() -> String {
-    let mut theme = make_me_pretty(
-        &run_command(
-            "gsettings",
-            &["get", "org.gnome.desktop.interface", "cursor-theme"],
-        )
-    );
+    let mut theme = make_me_pretty(&run_command(
+        "gsettings",
+        &["get", "org.gnome.desktop.interface", "cursor-theme"],
+    ));
 
     if theme.is_empty() {
         theme = gtk_fetch("gtk-cursor-theme-name");
@@ -454,12 +438,10 @@ pub fn cursor_theme() -> String {
 }
 
 pub fn gtk_font() -> String {
-    let mut font = make_me_pretty(
-        &run_command(
-            "gsettings",
-            &["get", "org.gnome.desktop.interface", "font-name"],
-        )
-    );
+    let mut font = make_me_pretty(&run_command(
+        "gsettings",
+        &["get", "org.gnome.desktop.interface", "font-name"],
+    ));
 
     if font.is_empty() {
         font = gtk_fetch("gtk-font-name");
@@ -501,22 +483,15 @@ pub fn cpu(round_to: usize, full_name: bool, colorize: bool) -> String {
         }
     }
 
-    let max_freq = std::fs::read_to_string(
-        "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq",
-    )
-    .unwrap_or_default()
-    .trim()
-    .parse::<u64>()
-    .unwrap_or(0);
+    let max_freq = std::fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        .unwrap_or_default()
+        .trim()
+        .parse::<u64>()
+        .unwrap_or(0);
 
     let cpu_freq_info = format_frequency(max_freq, round_to);
 
-    let mut full_cpu_info = format!(
-        "{} ({}) @ {}",
-        cpu_info.trim(),
-        cpu_count,
-        cpu_freq_info
-    );
+    let mut full_cpu_info = format!("{} ({}) @ {}", cpu_info.trim(), cpu_count, cpu_freq_info);
 
     if colorize {
         if cpu_info.contains("AMD") {
@@ -539,16 +514,11 @@ pub fn cpu(round_to: usize, full_name: bool, colorize: bool) -> String {
             );
         }
     }
-    
+
     full_cpu_info
 }
 
-pub fn memory(
-    gib: bool, 
-    round_to: usize, 
-    colorize: bool,
-    reset_color: &str,
-) -> String {
+pub fn memory(gib: bool, round_to: usize, colorize: bool, reset_color: &str) -> String {
     let content = match std::fs::read_to_string("/proc/meminfo") {
         Ok(content) => content,
         Err(_) => return String::new(),
@@ -590,8 +560,16 @@ pub fn memory(
 
     let (used, total) = if gib {
         (
-            format!("{:.precision$} GiB", memory_used / 1024.0, precision = round_to),
-            format!("{:.precision$} GiB", memory_total / 1024.0, precision = round_to),
+            format!(
+                "{:.precision$} GiB",
+                memory_used / 1024.0,
+                precision = round_to
+            ),
+            format!(
+                "{:.precision$} GiB",
+                memory_total / 1024.0,
+                precision = round_to
+            ),
         )
     } else {
         (
@@ -599,16 +577,11 @@ pub fn memory(
             format!("{:.precision$} MiB", memory_total, precision = round_to),
         )
     };
-    
+
     let mut percent = memory_percent.to_string();
 
     if colorize {
-        percent = format!(
-            "{}{}%{}",
-            colors::get_color(2, true),
-            percent,
-            reset_color,
-        );
+        percent = format!("{}{}%{}", colors::get_color(2, true), percent, reset_color,);
     } else {
         percent.push('%');
     }
@@ -684,9 +657,7 @@ fn filesystem_type(path: &str) -> String {
 
     let mut stat = std::mem::MaybeUninit::<libc::statfs>::uninit();
 
-    let result = unsafe {
-        libc::statfs(path.as_ptr(), stat.as_mut_ptr())
-    };
+    let result = unsafe { libc::statfs(path.as_ptr(), stat.as_mut_ptr()) };
 
     if result != 0 {
         return String::new();
@@ -721,9 +692,7 @@ pub fn disk(
 
     let mut stat = std::mem::MaybeUninit::<libc::statvfs>::uninit();
 
-    let result = unsafe {
-        libc::statvfs(c_path.as_ptr(), stat.as_mut_ptr())
-    };
+    let result = unsafe { libc::statvfs(c_path.as_ptr(), stat.as_mut_ptr()) };
 
     if result != 0 {
         return String::new();
@@ -731,9 +700,9 @@ pub fn disk(
 
     let stat = unsafe { stat.assume_init() };
 
-    let block_size = stat.f_frsize as u64;
-    let total_space = block_size * stat.f_blocks as u64;
-    let free_space = block_size * stat.f_bfree as u64;
+    let block_size = stat.f_frsize;
+    let total_space = block_size * stat.f_blocks;
+    let free_space = block_size * stat.f_bfree;
     let used_space = total_space - free_space;
 
     let bytes_per_gib = 1024_u64.pow(3);
@@ -760,8 +729,7 @@ pub fn disk(
     } else {
         format!(
             "{} GiB / {} GiB",
-            used_space_gib as u64,
-            total_space_gib as u64,
+            used_space_gib as u64, total_space_gib as u64,
         )
     };
 
@@ -804,11 +772,7 @@ pub fn gpu(full_name: bool, colorize: bool, reset_color: &str) -> String {
                 continue;
             }
 
-            if let Some(gpu) = line
-                .split('[')
-                .nth(1)
-                .and_then(|gpu| gpu.split(']').next())
-            {
+            if let Some(gpu) = line.split('[').nth(1).and_then(|gpu| gpu.split(']').next()) {
                 gpus.push(gpu.to_string());
             }
         }
@@ -829,29 +793,13 @@ pub fn gpu(full_name: bool, colorize: bool, reset_color: &str) -> String {
             }
         }
 
-
         if colorize {
             if gpu.contains("NVIDIA") {
-                *gpu = format!(
-                    "{}{}{}",
-                    colors::get_color(2, true),
-                    gpu,
-                    reset_color,
-                );
+                *gpu = format!("{}{}{}", colors::get_color(2, true), gpu, reset_color,);
             } else if gpu.contains("AMD") {
-                *gpu = format!(
-                    "{}{}{}",
-                    colors::get_color(1, true),
-                    gpu,
-                    reset_color,
-                );
+                *gpu = format!("{}{}{}", colors::get_color(1, true), gpu, reset_color,);
             } else if gpu.contains("Intel") {
-                *gpu = format!(
-                    "{}{}{}",
-                    colors::get_color(5, true),
-                    gpu,
-                    reset_color,
-                );
+                *gpu = format!("{}{}{}", colors::get_color(5, true), gpu, reset_color,);
             }
         }
     }
@@ -859,7 +807,7 @@ pub fn gpu(full_name: bool, colorize: bool, reset_color: &str) -> String {
     match gpus.len() {
         0 => String::new(),
         1 => gpus[0].clone(),
-        _ => format!("{}", gpus.join(" / ")),
+        _ => gpus.join(" / "),
     }
 }
 
@@ -879,38 +827,26 @@ pub fn gpu_driver(single_driver: bool) -> String {
                 None => continue,
             };
 
-            let driver_output = run_command(
-                "lspci",
-                &["-vv", "-s", pci_id],
-            );
+            let driver_output = run_command("lspci", &["-vv", "-s", pci_id]);
 
-            let driver = driver_output
-                .lines()
-                .find_map(|line| {
-                    line.trim()
-                        .strip_prefix("Kernel driver in use:")
-                        .map(str::trim)
-                });
+            let driver = driver_output.lines().find_map(|line| {
+                line.trim()
+                    .strip_prefix("Kernel driver in use:")
+                    .map(str::trim)
+            });
 
             if let Some(driver) = driver {
                 if driver == "nvidia" {
                     let version = std::fs::read_to_string("/proc/driver/nvidia/version")
                         .ok()
                         .and_then(|content| {
-                            content
-                                .split("  ")
-                                .nth(1)
-                                .map(str::trim)
-                                .map(String::from)
+                            content.split("  ").nth(1).map(str::trim).map(String::from)
                         })
                         .unwrap_or_default();
 
                     let kernel_version = run_command("uname", &["-r"]);
 
-                    let dkms_path = format!(
-                        "/lib/modules/{}/updates/dkms",
-                        kernel_version.trim()
-                    );
+                    let dkms_path = format!("/lib/modules/{}/updates/dkms", kernel_version.trim());
 
                     let driver_name = if std::path::Path::new(&dkms_path).exists() {
                         format!("nvidia-dkms {}", version)
@@ -931,7 +867,7 @@ pub fn gpu_driver(single_driver: bool) -> String {
     if drivers.is_empty() {
         String::new()
     } else if drivers.len() > 1 && !single_driver {
-        format!("{}", drivers.join(" / "))
+        drivers.join(" / ")
     } else {
         drivers[0].clone()
     }

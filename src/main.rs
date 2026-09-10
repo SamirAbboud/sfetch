@@ -1,14 +1,14 @@
 mod cache;
 mod colors;
-mod utils;
+mod config;
 mod fetch;
 mod logos;
-mod config;
 mod render;
+mod utils;
 
 use clap::Parser;
-use std::path::PathBuf;
 use render::render;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(name = "sfetch")]
